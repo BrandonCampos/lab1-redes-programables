@@ -1,0 +1,6 @@
+equipos:
+  - nombre: mt-lab
+    host: 10.60.30.202
+    device_type: mikrotik_routeros
+    usuario: lab-ssh
+    rol: escritura
