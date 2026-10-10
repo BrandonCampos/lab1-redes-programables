@@ -4,6 +4,8 @@
 import os
 import re
 import yaml
+import json
+from datetime import datetime
 from getpass import getpass
 
 from netmiko import ConnectHandler
@@ -189,9 +191,16 @@ def conectar_equipo(equipo):
         "session_log": f"logs/{equipo['nombre']}.log",
     }
 
+    resultado = {
+        "equipo": equipo["nombre"],
+        "ip": equipo["host"],
+        "fecha_hora": datetime.now().isoformat(timespec="seconds"),
+        "estado": "error",
+        "datos": {},
+    }
+
     try:
         with ConnectHandler(**parametros) as conexion:
-
             print(f"\n[OK] Conectado a {equipo['nombre']}")
 
             estado = obtener_estado(
@@ -199,57 +208,77 @@ def conectar_equipo(equipo):
                 equipo["device_type"],
             )
 
-            print("\nEstado estructurado:")
-            print("--------------------")
-
-            print(f"Nombre: {estado['nombre']}")
-            print(f"Uptime: {estado['uptime']}")
-
-            print("\nInterfaces:")
-
-            for interfaz in estado["interfaces"]:
-                print(
-                    f"  {interfaz['interface']} "
-                    f"{interfaz['address']}"
-                )
-
-            print("\nRuta por defecto:")
-
-            if estado["ruta_default"]:
-                print(
-                    f"  Gateway: "
-                    f"{estado['ruta_default']['gateway']}"
-                )
-            else:
-                print("  No encontrada")
-
-            return estado
+            resultado["estado"] = "ok"
+            resultado["datos"] = estado
 
     except NetmikoAuthenticationException:
-        print(
-            f"[ERROR] Falló la autenticación "
-            f"en {equipo['nombre']}"
-        )
+        mensaje = "error de autenticacion"
+        print(f"[ERROR] {equipo['nombre']}: {mensaje}")
+        resultado["estado"] = mensaje
 
     except NetmikoTimeoutException:
-        print(
-            f"[ERROR] No se pudo conectar "
-            f"a {equipo['nombre']}"
-        )
+        mensaje = "error de conexion"
+        print(f"[ERROR] {equipo['nombre']}: {mensaje}")
+        resultado["estado"] = mensaje
 
     except Exception as error:
-        print(
-            f"[ERROR] {equipo['nombre']}: {error}"
-        )
+        mensaje = str(error)
+        print(f"[ERROR] {equipo['nombre']}: {mensaje}")
+        resultado["estado"] = mensaje
 
-    return None
-
+    return resultado
 
 def main():
     equipos = cargar_inventario()
 
+    reporte = []
+
     for equipo in equipos:
-        conectar_equipo(equipo)
+        resultado = conectar_equipo(equipo)
+        reporte.append(resultado)
+
+    # Guardar reporte JSON
+    with open("reporte_estado.json", "w", encoding="utf-8") as archivo:
+        json.dump(
+            reporte,
+            archivo,
+            indent=4,
+            ensure_ascii=False,
+        )
+
+    print("\nReporte guardado en reporte_estado.json")
+
+    # Tabla resumen
+    print("\nRESUMEN")
+    print("-" * 90)
+
+    print(
+        f"{'EQUIPO':<18}"
+        f"{'IP':<18}"
+        f"{'ESTADO':<22}"
+        f"{'INTERFACES':<15}"
+        f"{'GATEWAY':<17}"
+    )
+
+    print("-" * 90)
+
+    for item in reporte:
+        datos = item.get("datos", {})
+
+        interfaces = datos.get("interfaces", [])
+        cantidad_interfaces = len(interfaces)
+
+        ruta = datos.get("ruta_default", {})
+        gateway = ruta.get("gateway") or "-"
+
+        print(
+            f"{item['equipo']:<18}"
+            f"{item['ip']:<18}"
+            f"{item['estado']:<22}"
+            f"{cantidad_interfaces:<15}"
+            f"{gateway:<17}"
+        )
+
 
 
 if __name__ == "__main__":
