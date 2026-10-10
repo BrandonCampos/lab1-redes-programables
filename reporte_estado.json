@@ -2,11 +2,11 @@
     {
         "equipo": "mt-lab",
         "ip": "10.60.30.202",
-        "fecha_hora": "2026-10-09T22:26:04",
+        "fecha_hora": "2026-10-09T22:32:42",
         "estado": "ok",
         "datos": {
             "nombre": "BRANDON-LAB1",
-            "uptime": "8m56s",
+            "uptime": "15m34s",
             "interfaces": [
                 {
                     "interface": "ether1",
