@@ -2,16 +2,21 @@
     {
         "equipo": "mt-lab",
         "ip": "10.60.30.202",
-        "fecha_hora": "2026-10-09T22:32:42",
+        "fecha_hora": "2026-10-09T22:33:42",
         "estado": "ok",
         "datos": {
             "nombre": "BRANDON-LAB1",
-            "uptime": "15m34s",
+            "uptime": "16m34s",
             "interfaces": [
                 {
                     "interface": "ether1",
                     "address": "10.60.30.202/24",
                     "network": "10.60.30.0"
+                },
+                {
+                    "interface": "lo-ssh-17",
+                    "address": "10.253.0.17/32",
+                    "network": "10.253.0.17"
                 }
             ],
             "ruta_default": {}
